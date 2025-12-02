@@ -9,13 +9,35 @@ const swaggerSpec = require('./config/swagger');
 const connectDB = require('./config/db');
 
 const app = express();
+
+// Middlewares de segurança e parsing
 app.use(helmet());
 app.use(cors());
 app.use(express.json({ limit: '1mb' }));
 app.use(morgan('dev'));
 
-// Connect DB
-connectDB(process.env.MONGODB_URI || 'mongodb://localhost:27017/pyroalert');
+// Conectar ao banco de dados
+connectDB(process.env.MONGODB_URI);
+
+// ==================== ROTAS ====================
+
+// Rota raiz - informações da API
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    name: 'PyroAlert API',
+    version: '1.0.0',
+    description: 'API para sistema de alertas e monitoramento',
+    documentation: '/api/docs',
+    endpoints: {
+      health: '/api/v1/health',
+      auth: '/api/v1/auth',
+      devices: '/api/v1/devices',
+      alerts: '/api/v1/alerts',
+      telemetry: '/api/v1/telemetry'
+    }
+  });
+});
 
 // Swagger Documentation
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
@@ -29,21 +51,46 @@ app.get('/api/docs.json', (req, res) => {
   res.send(swaggerSpec);
 });
 
-// Routes
+// API Routes
+app.use('/api/v1/health', require('./routes/health'));
 app.use('/api/v1/auth', require('./routes/auth'));
 app.use('/api/v1/devices', require('./routes/devices'));
-app.use('/api/v1/telemetry', require('./routes/telemetry'));
 app.use('/api/v1/alerts', require('./routes/alerts'));
-app.use('/api/v1/health', require('./routes/health'));
+app.use('/api/v1/telemetry', require('./routes/telemetry'));
 
-// Global error handler
-app.use((err, req, res, next) => {
-  console.error(err);
-  res.status(500).json({ message: 'internal_error', detail: err.message });
+// ==================== ERROR HANDLERS ====================
+
+// 404 - Rota não encontrada
+app.use((req, res, next) => {
+  res.status(404).json({
+    success: false,
+    message: 'Rota não encontrada',
+    path: req.originalUrl,
+    method: req.method,
+    hint: 'Verifique a documentação em /api/docs'
+  });
 });
 
+// Error handler global
+app.use((err, req, res, next) => {
+  console.error('Error:', err.message);
+  console.error(err.stack);
+  
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || 'Erro interno do servidor',
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+  });
+});
+
+// ==================== START SERVER ====================
+
 const port = process.env.PORT || 4000;
+
 app.listen(port, () => {
-  console.log(`PyroAlert API listening on http://localhost:${port}`);
-  console.log(`📚 Swagger docs: http://localhost:${port}/api/docs`);
+  console.log('='.repeat(50));
+  console.log(`🔥 PyroAlert API v1.0.0`);
+  console.log(`🚀 Servidor rodando em http://localhost:${port}`);
+  console.log(`📚 Documentação em http://localhost:${port}/api/docs`);
+  console.log('='.repeat(50));
 });

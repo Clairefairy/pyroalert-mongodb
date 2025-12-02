@@ -1,15 +1,59 @@
 const express = require('express');
 const router = express.Router();
-const Telemetry = require('../models/Telemetry');
-const DeviceModel = require('../models/Device');
+const telemetryController = require('../controllers/telemetryController');
 const auth = require('../middleware/auth');
+
+/**
+ * @swagger
+ * /api/v1/telemetry:
+ *   get:
+ *     summary: Listar telemetria
+ *     tags: [Telemetria]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: device_id
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 100
+ *     responses:
+ *       200:
+ *         description: Lista de telemetria
+ */
+router.get('/', auth, telemetryController.getAll);
+
+/**
+ * @swagger
+ * /api/v1/telemetry/latest/{device_id}:
+ *   get:
+ *     summary: Última telemetria do dispositivo
+ *     tags: [Telemetria]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: device_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Última telemetria
+ *       404:
+ *         description: Não encontrada
+ */
+router.get('/latest/:device_id', auth, telemetryController.getLatest);
 
 /**
  * @swagger
  * /api/v1/telemetry:
  *   post:
  *     summary: Enviar telemetria
- *     description: Recebe dados de telemetria de um dispositivo e atualiza seu status
  *     tags: [Telemetria]
  *     security:
  *       - bearerAuth: []
@@ -18,69 +62,11 @@ const auth = require('../middleware/auth');
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - device_id
- *               - timestamp
- *             properties:
- *               device_id:
- *                 type: string
- *                 example: PYRO-001
- *               timestamp:
- *                 type: string
- *                 format: date-time
- *                 example: 2024-01-15T10:30:00Z
- *               sensors:
- *                 type: object
- *                 example: { temperature: 45.2, humidity: 30, smoke: 0.8 }
- *               battery_v:
- *                 type: number
- *                 example: 3.7
- *               gateway:
- *                 type: string
- *                 example: GW-001
- *               rssi:
- *                 type: number
- *                 example: -85
- *               snr:
- *                 type: number
- *                 example: 7.5
- *               raw_payload:
- *                 type: string
+ *             $ref: '#/components/schemas/Telemetry'
  *     responses:
  *       201:
- *         description: Telemetria armazenada com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 stored:
- *                   type: boolean
- *                   example: true
- *                 id:
- *                   type: string
- *                   example: 507f1f77bcf86cd799439011
- *       400:
- *         description: device_id e timestamp são obrigatórios
- *       401:
- *         description: Token inválido ou ausente
+ *         description: Telemetria armazenada
  */
-router.post('/', auth, async (req, res) => {
-  const body = req.body;
-  if (!body.device_id || !body.timestamp) return res.status(400).json({ message: 'device_id and timestamp required' });
-  const t = await Telemetry.create({
-    device_id: body.device_id,
-    timestamp: new Date(body.timestamp),
-    sensors: body.sensors || {},
-    battery_v: body.battery_v,
-    gateway: (body.metadata && body.metadata.gateway) || body.gateway,
-    rssi: body.rssi,
-    snr: body.snr,
-    raw_payload: body.raw_payload
-  });
-  await DeviceModel.updateOne({ device_id: body.device_id }, { last_seen: new Date(body.timestamp), status: 'online' });
-  res.status(201).json({ stored: true, id: t._id });
-});
+router.post('/', auth, telemetryController.create);
 
 module.exports = router;

@@ -1,30 +1,28 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 
 /**
  * @swagger
  * /api/v1/health:
  *   get:
  *     summary: Health check
- *     description: Verifica se a API está funcionando
+ *     description: Verifica se a API e banco de dados estão funcionando
  *     tags: [Sistema]
  *     responses:
  *       200:
- *         description: API funcionando
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: ok
- *                 time:
- *                   type: string
- *                   format: date-time
+ *         description: Sistema funcionando
  */
 router.get('/', async (req, res) => {
-  res.json({ status: 'ok', time: new Date().toISOString() });
+  const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+  
+  res.json({ 
+    success: true,
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    database: dbStatus,
+    uptime: process.uptime()
+  });
 });
 
 module.exports = router;
