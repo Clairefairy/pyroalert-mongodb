@@ -4,6 +4,8 @@ require('express-async-errors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const cors = require('cors');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./config/swagger');
 const connectDB = require('./config/db');
 
 const app = express();
@@ -14,6 +16,18 @@ app.use(morgan('dev'));
 
 // Connect DB
 connectDB(process.env.MONGODB_URI || 'mongodb://localhost:27017/pyroalert');
+
+// Swagger Documentation
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'PyroAlert API - Documentação'
+}));
+
+// JSON spec endpoint
+app.get('/api/docs.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
 
 // Routes
 app.use('/api/v1/auth', require('./routes/auth'));
@@ -29,4 +43,7 @@ app.use((err, req, res, next) => {
 });
 
 const port = process.env.PORT || 4000;
-app.listen(port, () => console.log(`PyroAlert API listening on http://localhost:${port}`));
+app.listen(port, () => {
+  console.log(`PyroAlert API listening on http://localhost:${port}`);
+  console.log(`📚 Swagger docs: http://localhost:${port}/api/docs`);
+});
