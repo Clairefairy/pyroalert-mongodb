@@ -6,16 +6,16 @@ const jwt = require('jsonwebtoken');
  * Autentica usuário e retorna JWT
  */
 exports.login = async (req, res) => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
   
-  if (!username || !password) {
+  if (!email || !password) {
     return res.status(400).json({ 
       success: false,
-      message: 'username e password são obrigatórios' 
+      message: 'email e password são obrigatórios' 
     });
   }
   
-  const user = await User.findOne({ username }).exec();
+  const user = await User.findOne({ email: email.toLowerCase().trim() }).exec();
   if (!user) {
     return res.status(401).json({ 
       success: false,
@@ -35,7 +35,7 @@ exports.login = async (req, res) => {
   const token = jwt.sign(
     { 
       sub: user._id.toString(), 
-      username: user.username, 
+      email: user.email, 
       role: user.role 
     }, 
     process.env.JWT_SECRET, 
@@ -48,7 +48,7 @@ exports.login = async (req, res) => {
     expires_in: expiresIn,
     user: {
       id: user._id,
-      username: user.username,
+      email: user.email,
       name: user.name,
       role: user.role
     }
@@ -60,26 +60,26 @@ exports.login = async (req, res) => {
  * Registra novo usuário
  */
 exports.register = async (req, res) => {
-  const { username, password, name, id_number, phone, role } = req.body;
+  const { email, password, name, id_number, phone, role } = req.body;
   
-  if (!username || !password) {
+  if (!email || !password) {
     return res.status(400).json({ 
       success: false,
-      message: 'username e password são obrigatórios' 
+      message: 'email e password são obrigatórios' 
     });
   }
   
   // Verificar se usuário já existe
-  const exists = await User.findOne({ username }).exec();
+  const exists = await User.findOne({ email: email.toLowerCase().trim() }).exec();
   if (exists) {
     return res.status(409).json({ 
       success: false,
-      message: 'Username já está em uso' 
+      message: 'Email já está em uso' 
     });
   }
   
   const user = await User.createWithPassword({ 
-    username, 
+    email, 
     password, 
     name, 
     id_number, 
@@ -92,7 +92,7 @@ exports.register = async (req, res) => {
     message: 'Usuário criado com sucesso',
     user: {
       id: user._id,
-      username: user.username,
+      email: user.email,
       name: user.name,
       role: user.role
     }

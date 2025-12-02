@@ -31,7 +31,7 @@ async function testConnection() {
 
     // Testar criação de usuário com dados aleatórios
     const testUser = {
-      username: 'usuario_teste_' + Date.now(),
+      email: `teste_${Date.now()}@pyroalert.com`,
       password: 'senha123',
       name: 'Usuário de Teste',
       id_number: gerarCPF(),
@@ -40,13 +40,14 @@ async function testConnection() {
     };
 
     console.log('📝 Criando usuário de teste...');
+    console.log('   Email:', testUser.email);
     console.log('   CPF gerado:', testUser.id_number);
     console.log('   Telefone gerado:', testUser.phone);
     
     const created = await User.createWithPassword(testUser);
     console.log('✅ Usuário criado:', {
       id: created._id,
-      username: created.username,
+      email: created.email,
       name: created.name,
       id_number: created.id_number,
       phone: created.phone,

@@ -31,7 +31,7 @@ const options = {
           type: 'object',
           properties: {
             _id: { type: 'string', example: '507f1f77bcf86cd799439011' },
-            username: { type: 'string', example: 'admin' },
+            email: { type: 'string', format: 'email', example: 'admin@pyroalert.com' },
             name: { type: 'string', example: 'Administrador' },
             id_number: { type: 'string', example: '12345678901' },
             id_type: { type: 'string', enum: ['CPF', 'CNPJ'], example: 'CPF' },
@@ -96,9 +96,9 @@ const options = {
         },
         LoginRequest: {
           type: 'object',
-          required: ['username', 'password'],
+          required: ['email', 'password'],
           properties: {
-            username: { type: 'string', example: 'admin' },
+            email: { type: 'string', format: 'email', example: 'admin@pyroalert.com' },
             password: { type: 'string', example: 'senha123' }
           }
         },

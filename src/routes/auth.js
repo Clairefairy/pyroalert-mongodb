@@ -39,10 +39,11 @@ router.post('/login', authController.login);
  *         application/json:
  *           schema:
  *             type: object
- *             required: [username, password]
+ *             required: [email, password]
  *             properties:
- *               username:
+ *               email:
  *                 type: string
+ *                 format: email
  *               password:
  *                 type: string
  *               name:
@@ -60,7 +61,7 @@ router.post('/login', authController.login);
  *       400:
  *         description: Dados inválidos
  *       409:
- *         description: Username já existe
+ *         description: Email já existe
  */
 router.post('/register', authController.register);
 

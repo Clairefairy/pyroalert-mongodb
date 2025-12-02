@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs');
 
 /**
  * User schema
- * - username: login name (unique)
+ * - email: email address for login (unique)
  * - passwordHash: hashed password
  * - name: full name
  * - id_number: CPF or CNPJ (only one should be provided)
@@ -14,8 +14,21 @@ const bcrypt = require('bcryptjs');
  * - role: RBAC role
  */
 
+// Simple email validation regex
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const UserSchema = new Schema({
-  username: { type: String, required: true, unique: true },
+  email: { 
+    type: String, 
+    required: true, 
+    unique: true,
+    lowercase: true,
+    trim: true,
+    validate: {
+      validator: (v) => emailRegex.test(v),
+      message: 'Email inválido'
+    }
+  },
   passwordHash: { type: String, required: true },
   name: { type: String, required: false },
   id_number: { type: String, required: false, unique: true, sparse: true },
@@ -65,10 +78,10 @@ UserSchema.methods.verifyPassword = function(password) {
 };
 
 // Static helper to create user with password hashing
-UserSchema.statics.createWithPassword = async function({ username, password, name, id_number, phone, role }) {
+UserSchema.statics.createWithPassword = async function({ email, password, name, id_number, phone, role }) {
   const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS || '10', 10);
   const hash = await bcrypt.hash(password, saltRounds);
-  const u = new this({ username, passwordHash: hash, name, id_number, phone, role });
+  const u = new this({ email, passwordHash: hash, name, id_number, phone, role });
   return u.save();
 };
 
