@@ -109,6 +109,54 @@ const options = {
             expires_in: { type: 'number', example: 900 }
           }
         },
+        PasswordGrant: {
+          type: 'object',
+          required: ['grant_type', 'email', 'password'],
+          properties: {
+            grant_type: { type: 'string', enum: ['password'], example: 'password' },
+            email: { type: 'string', format: 'email', example: 'usuario@exemplo.com' },
+            password: { type: 'string', example: 'senha123' },
+            scope: { type: 'string', example: 'read write', description: 'Escopos separados por espaço' }
+          }
+        },
+        RefreshTokenGrant: {
+          type: 'object',
+          required: ['grant_type', 'refresh_token'],
+          properties: {
+            grant_type: { type: 'string', enum: ['refresh_token'], example: 'refresh_token' },
+            refresh_token: { type: 'string', example: 'abc123def456...' },
+            scope: { type: 'string', example: 'read write' }
+          }
+        },
+        TokenResponse: {
+          type: 'object',
+          properties: {
+            access_token: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' },
+            token_type: { type: 'string', example: 'Bearer' },
+            expires_in: { type: 'number', example: 900, description: 'Segundos até expirar' },
+            refresh_token: { type: 'string', example: 'abc123def456...' },
+            scope: { type: 'string', example: 'read write' }
+          }
+        },
+        TokenIntrospection: {
+          type: 'object',
+          properties: {
+            active: { type: 'boolean', example: true },
+            token_type: { type: 'string', example: 'Bearer' },
+            scope: { type: 'string', example: 'read write' },
+            sub: { type: 'string', example: '507f1f77bcf86cd799439011' },
+            email: { type: 'string', example: 'usuario@exemplo.com' },
+            exp: { type: 'number', example: 1699999999 },
+            iat: { type: 'number', example: 1699999000 }
+          }
+        },
+        OAuthError: {
+          type: 'object',
+          properties: {
+            error: { type: 'string', example: 'invalid_grant' },
+            error_description: { type: 'string', example: 'Credenciais inválidas' }
+          }
+        },
         Error: {
           type: 'object',
           properties: {
@@ -118,7 +166,15 @@ const options = {
       }
     }
   },
-  apis: ['./src/routes/*.js']
+  apis: ['./src/routes/*.js'],
+  tags: [
+    { name: 'OAuth2', description: 'Endpoints OAuth2 para autenticação' },
+    { name: 'Autenticação', description: 'Endpoints de autenticação legados' },
+    { name: 'Dispositivos', description: 'Gerenciamento de dispositivos' },
+    { name: 'Alertas', description: 'Gerenciamento de alertas' },
+    { name: 'Telemetria', description: 'Dados de telemetria' },
+    { name: 'Health', description: 'Status da API' }
+  ]
 };
 
 const swaggerSpec = swaggerJsdoc(options);

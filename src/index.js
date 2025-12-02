@@ -32,6 +32,7 @@ app.get('/', (req, res) => {
     endpoints: {
       health: '/api/v1/health',
       auth: '/api/v1/auth',
+      oauth: '/oauth',
       devices: '/api/v1/devices',
       alerts: '/api/v1/alerts',
       telemetry: '/api/v1/telemetry'
@@ -57,6 +58,9 @@ app.use('/api/v1/auth', require('./routes/auth'));
 app.use('/api/v1/devices', require('./routes/devices'));
 app.use('/api/v1/alerts', require('./routes/alerts'));
 app.use('/api/v1/telemetry', require('./routes/telemetry'));
+
+// OAuth2 Routes
+app.use('/oauth', require('./routes/oauth'));
 
 // ==================== ERROR HANDLERS ====================
 
