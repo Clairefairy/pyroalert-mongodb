@@ -12,6 +12,9 @@ const bcrypt = require('bcryptjs');
  * - id_type: either 'CPF' or 'CNPJ' (determined automatically)
  * - phone: contact phone number (normalized)
  * - role: RBAC role
+ * - twoFactorEnabled: se 2FA está ativado
+ * - twoFactorSecret: secret TOTP (criptografado)
+ * - recoveryCodes: códigos de recuperação para 2FA
  */
 
 // Simple email validation regex
@@ -35,7 +38,17 @@ const UserSchema = new Schema({
   id_type: { type: String, enum: ['CPF','CNPJ'], required: false },
   phone: { type: String, required: false },
   role: { type: String, enum: ['admin','operator','viewer'], default: 'viewer' },
-  metadata: { type: Schema.Types.Mixed }
+  metadata: { type: Schema.Types.Mixed },
+  
+  // Two-Factor Authentication (2FA)
+  twoFactorEnabled: { type: Boolean, default: false },
+  twoFactorSecret: { type: String, select: false }, // TOTP secret (não retorna por padrão)
+  twoFactorPendingSecret: { type: String, select: false }, // Secret temporário durante setup
+  recoveryCodes: [{ 
+    code: { type: String },
+    used: { type: Boolean, default: false },
+    usedAt: { type: Date }
+  }]
 }, { timestamps: true });
 
 // Simple CPF validator (digits only, 11 digits) and CNPJ validator (14 digits)

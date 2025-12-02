@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const RefreshToken = require('../models/RefreshToken');
 const jwt = require('jsonwebtoken');
+const { verifyLoginCode } = require('./twoFactorController');
 
 /**
  * Gera access token JWT
@@ -32,7 +33,7 @@ const generateAccessToken = (user, scope = ['read', 'write']) => {
  * - refresh_token: renovar access token
  */
 exports.token = async (req, res) => {
-  const { grant_type, email, password, refresh_token, scope } = req.body;
+  const { grant_type, email, password, refresh_token, scope, totp_code } = req.body;
   
   // Validar grant_type
   if (!grant_type) {
@@ -53,8 +54,11 @@ exports.token = async (req, res) => {
       });
     }
     
-    // Buscar usuário
-    const user = await User.findOne({ email: email.toLowerCase().trim() }).exec();
+    // Buscar usuário (incluindo campos 2FA)
+    const user = await User.findOne({ email: email.toLowerCase().trim() })
+      .select('+twoFactorSecret')
+      .exec();
+      
     if (!user) {
       return res.status(401).json({
         error: 'invalid_grant',
@@ -69,6 +73,28 @@ exports.token = async (req, res) => {
         error: 'invalid_grant',
         error_description: 'Credenciais inválidas'
       });
+    }
+    
+    // ==================== VERIFICAÇÃO 2FA ====================
+    if (user.twoFactorEnabled) {
+      // Se 2FA está ativado mas não foi fornecido código
+      if (!totp_code) {
+        return res.status(400).json({
+          error: 'mfa_required',
+          error_description: 'Autenticação de dois fatores é necessária',
+          mfa_required: true,
+          mfa_type: 'totp'
+        });
+      }
+      
+      // Verificar código 2FA
+      const is2FAValid = await verifyLoginCode(user, totp_code);
+      if (!is2FAValid) {
+        return res.status(401).json({
+          error: 'invalid_grant',
+          error_description: 'Código 2FA inválido'
+        });
+      }
     }
     
     // Gerar tokens
@@ -89,7 +115,8 @@ exports.token = async (req, res) => {
         id: user._id,
         email: user.email,
         name: user.name,
-        role: user.role
+        role: user.role,
+        twoFactorEnabled: user.twoFactorEnabled
       }
     });
   }

@@ -116,6 +116,7 @@ const options = {
             grant_type: { type: 'string', enum: ['password'], example: 'password' },
             email: { type: 'string', format: 'email', example: 'usuario@exemplo.com' },
             password: { type: 'string', example: 'senha123' },
+            totp_code: { type: 'string', example: '123456', description: 'Código 2FA (se habilitado)' },
             scope: { type: 'string', example: 'read write', description: 'Escopos separados por espaço' }
           }
         },
@@ -157,6 +158,66 @@ const options = {
             error_description: { type: 'string', example: 'Credenciais inválidas' }
           }
         },
+        MFARequiredError: {
+          type: 'object',
+          properties: {
+            error: { type: 'string', example: 'mfa_required' },
+            error_description: { type: 'string', example: 'Autenticação de dois fatores é necessária' },
+            mfa_required: { type: 'boolean', example: true },
+            mfa_type: { type: 'string', example: 'totp' }
+          }
+        },
+        TwoFactorSetupResponse: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            message: { type: 'string' },
+            data: {
+              type: 'object',
+              properties: {
+                qrCode: { type: 'string', description: 'QR code como data URL (base64)' },
+                secret: { type: 'string', description: 'Secret para entrada manual', example: 'JBSWY3DPEHPK3PXP' },
+                otpauthUrl: { type: 'string', description: 'URL otpauth://' },
+                instructions: { type: 'array', items: { type: 'string' } }
+              }
+            }
+          }
+        },
+        TwoFactorVerifyResponse: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            message: { type: 'string' },
+            data: {
+              type: 'object',
+              properties: {
+                recoveryCodes: { 
+                  type: 'array', 
+                  items: { type: 'string' },
+                  example: ['ABCD-EFGH-IJKL', 'MNOP-QRST-UVWX']
+                },
+                warning: { type: 'string' }
+              }
+            }
+          }
+        },
+        RecoveryCodesResponse: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            message: { type: 'string' },
+            data: {
+              type: 'object',
+              properties: {
+                recoveryCodes: { 
+                  type: 'array', 
+                  items: { type: 'string' }
+                },
+                warning: { type: 'string' }
+              }
+            }
+          }
+        },
         Error: {
           type: 'object',
           properties: {
@@ -169,6 +230,7 @@ const options = {
   apis: ['./src/routes/*.js'],
   tags: [
     { name: 'OAuth2', description: 'Endpoints OAuth2 para autenticação' },
+    { name: 'Two-Factor Auth', description: 'Autenticação de dois fatores (2FA/TOTP)' },
     { name: 'Autenticação', description: 'Endpoints de autenticação legados' },
     { name: 'Dispositivos', description: 'Gerenciamento de dispositivos' },
     { name: 'Alertas', description: 'Gerenciamento de alertas' },

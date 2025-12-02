@@ -33,6 +33,7 @@ app.get('/', (req, res) => {
       health: '/api/v1/health',
       auth: '/api/v1/auth',
       oauth: '/oauth',
+      '2fa': '/api/v1/2fa',
       devices: '/api/v1/devices',
       alerts: '/api/v1/alerts',
       telemetry: '/api/v1/telemetry'
@@ -61,6 +62,9 @@ app.use('/api/v1/telemetry', require('./routes/telemetry'));
 
 // OAuth2 Routes
 app.use('/oauth', require('./routes/oauth'));
+
+// Two-Factor Authentication Routes
+app.use('/api/v1/2fa', require('./routes/twoFactor'));
 
 // ==================== ERROR HANDLERS ====================
 
