@@ -349,6 +349,58 @@ exports.regenerateRecoveryCodes = async (req, res) => {
 };
 
 /**
+ * DELETE /api/v1/2fa
+ * Remove o 2FA usando apenas a senha (para casos de emergência)
+ */
+exports.remove = async (req, res) => {
+  const { password } = req.body;
+  
+  if (!password) {
+    return res.status(400).json({
+      success: false,
+      message: 'Senha é obrigatória'
+    });
+  }
+  
+  const user = await User.findById(req.user.id).select('+passwordHash');
+  
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: 'Usuário não encontrado'
+    });
+  }
+  
+  if (!user.twoFactorEnabled) {
+    return res.status(400).json({
+      success: false,
+      message: '2FA não está ativado'
+    });
+  }
+  
+  // Verifica senha
+  const isPasswordValid = await user.verifyPassword(password);
+  if (!isPasswordValid) {
+    return res.status(401).json({
+      success: false,
+      message: 'Senha incorreta'
+    });
+  }
+  
+  // Desativa 2FA
+  user.twoFactorEnabled = false;
+  user.twoFactorSecret = undefined;
+  user.twoFactorPendingSecret = undefined;
+  user.recoveryCodes = [];
+  await user.save();
+  
+  res.json({
+    success: true,
+    message: '2FA removido com sucesso'
+  });
+};
+
+/**
  * Função helper para verificar código 2FA durante login
  * Usada pelo oauthController
  */

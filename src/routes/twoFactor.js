@@ -154,5 +154,41 @@ router.post('/disable', auth, twoFactorController.disable);
  */
 router.post('/recovery-codes', auth, twoFactorController.regenerateRecoveryCodes);
 
+/**
+ * @swagger
+ * /api/v1/2fa:
+ *   delete:
+ *     summary: Remover 2FA (apenas com senha)
+ *     description: |
+ *       Remove a autenticação de dois fatores usando apenas a senha.
+ *       
+ *       **Use esta rota quando:**
+ *       - Perdeu acesso ao app autenticador
+ *       - Perdeu os códigos de recuperação
+ *       - Precisa desativar o 2FA de emergência
+ *     tags: [Two-Factor Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [password]
+ *             properties:
+ *               password:
+ *                 type: string
+ *                 description: Senha do usuário para confirmação
+ *     responses:
+ *       200:
+ *         description: 2FA removido com sucesso
+ *       400:
+ *         description: 2FA não está ativado
+ *       401:
+ *         description: Senha incorreta
+ */
+router.delete('/', auth, twoFactorController.remove);
+
 module.exports = router;
 
