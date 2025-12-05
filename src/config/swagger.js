@@ -223,6 +223,59 @@ const options = {
           properties: {
             message: { type: 'string', example: 'error_message' }
           }
+        },
+        SensorReading: {
+          type: 'object',
+          properties: {
+            value: { type: 'number', example: 25.5 },
+            readAt: { type: 'string', format: 'date-time' }
+          }
+        },
+        Reading: {
+          type: 'object',
+          properties: {
+            _id: { type: 'string', example: '507f1f77bcf86cd799439011' },
+            device: { type: 'string', example: '507f1f77bcf86cd799439011' },
+            smoke: { $ref: '#/components/schemas/SensorReading' },
+            sense: { $ref: '#/components/schemas/SensorReading' },
+            temp: { $ref: '#/components/schemas/SensorReading' },
+            humid: { $ref: '#/components/schemas/SensorReading' },
+            moist: { $ref: '#/components/schemas/SensorReading' },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' }
+          }
+        },
+        ReadingInput: {
+          type: 'object',
+          required: ['device_id'],
+          properties: {
+            device_id: { type: 'string', example: 'PYRO-001', description: 'ID do dispositivo' },
+            smoke: { $ref: '#/components/schemas/SensorReading' },
+            sense: { $ref: '#/components/schemas/SensorReading' },
+            temp: { $ref: '#/components/schemas/SensorReading' },
+            humid: { $ref: '#/components/schemas/SensorReading' },
+            moist: { $ref: '#/components/schemas/SensorReading' }
+          }
+        },
+        ApiSensorData: {
+          type: 'object',
+          properties: {
+            last_value: { type: 'number', example: 25.5 },
+            updated_at: { type: 'string', example: '2025-12-05T14:41:57Z' }
+          }
+        },
+        ReadingFromApiInput: {
+          type: 'object',
+          required: ['device_id'],
+          properties: {
+            device_id: { type: 'string', example: 'PYRO-001' },
+            smoke: { $ref: '#/components/schemas/ApiSensorData' },
+            sense: { $ref: '#/components/schemas/ApiSensorData' },
+            temp: { $ref: '#/components/schemas/ApiSensorData' },
+            humid: { $ref: '#/components/schemas/ApiSensorData' },
+            moist: { $ref: '#/components/schemas/ApiSensorData' },
+            raw: { type: 'object', description: 'Dados brutos da API (opcional)' }
+          }
         }
       }
     }
@@ -233,6 +286,8 @@ const options = {
     { name: 'Two-Factor Auth', description: 'Autenticação de dois fatores (2FA/TOTP)' },
     { name: 'Autenticação', description: 'Endpoints de autenticação legados' },
     { name: 'Dispositivos', description: 'Gerenciamento de dispositivos' },
+    { name: 'Leituras', description: 'Leituras dos sensores (smoke, temp, humid, moist, sense)' },
+    { name: 'Adafruit IO', description: 'Integração com Adafruit IO para coleta de dados' },
     { name: 'Alertas', description: 'Gerenciamento de alertas' },
     { name: 'Telemetria', description: 'Dados de telemetria' },
     { name: 'Health', description: 'Status da API' }

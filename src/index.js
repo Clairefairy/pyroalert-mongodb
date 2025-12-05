@@ -35,6 +35,8 @@ app.get('/', (req, res) => {
       oauth: '/oauth',
       '2fa': '/api/v1/2fa',
       devices: '/api/v1/devices',
+      readings: '/api/v1/readings',
+      adafruit: '/api/v1/adafruit',
       alerts: '/api/v1/alerts',
       telemetry: '/api/v1/telemetry'
     }
@@ -57,6 +59,7 @@ app.get('/api/docs.json', (req, res) => {
 app.use('/api/v1/health', require('./routes/health'));
 app.use('/api/v1/auth', require('./routes/auth'));
 app.use('/api/v1/devices', require('./routes/devices'));
+app.use('/api/v1/readings', require('./routes/readings'));
 app.use('/api/v1/alerts', require('./routes/alerts'));
 app.use('/api/v1/telemetry', require('./routes/telemetry'));
 
@@ -65,6 +68,9 @@ app.use('/oauth', require('./routes/oauth'));
 
 // Two-Factor Authentication Routes
 app.use('/api/v1/2fa', require('./routes/twoFactor'));
+
+// Adafruit IO Integration Routes
+app.use('/api/v1/adafruit', require('./routes/adafruit'));
 
 // ==================== ERROR HANDLERS ====================
 
