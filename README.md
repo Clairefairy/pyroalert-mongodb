@@ -366,7 +366,3 @@ node test-connection.js
 ## 📝 Licença
 
 Este projeto está sob a licença MIT.
-
----
-
-Desenvolvido com ❤️ para o projeto PyroAlert
