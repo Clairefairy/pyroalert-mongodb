@@ -1,5 +1,21 @@
 const Reading = require('../models/Reading');
 const Device = require('../models/Device');
+const mongoose = require('mongoose');
+
+/**
+ * Helper para buscar dispositivo por _id (ObjectId) ou device_id (string)
+ */
+const findDeviceByIdOrDeviceId = async (identifier) => {
+  // Verifica se é um ObjectId válido
+  if (mongoose.Types.ObjectId.isValid(identifier)) {
+    // Tenta buscar por _id primeiro
+    const deviceById = await Device.findById(identifier).exec();
+    if (deviceById) return deviceById;
+  }
+  
+  // Se não encontrou por _id, busca por device_id
+  return Device.findOne({ device_id: identifier }).exec();
+};
 
 /**
  * GET /api/v1/readings
@@ -162,11 +178,12 @@ exports.createFromApi = async (req, res) => {
 /**
  * GET /api/v1/readings/device/:device_id/latest
  * Busca a última leitura de um dispositivo
+ * Aceita tanto o _id do MongoDB quanto o device_id textual
  */
 exports.getLatest = async (req, res) => {
   const { device_id } = req.params;
   
-  const device = await Device.findOne({ device_id }).exec();
+  const device = await findDeviceByIdOrDeviceId(device_id);
   if (!device) {
     return res.status(404).json({ 
       success: false, 
@@ -193,12 +210,13 @@ exports.getLatest = async (req, res) => {
  * GET /api/v1/readings/device/:device_id/history
  * Busca histórico de leituras de um dispositivo
  * A ordenação e filtro por data são baseados no campo readAt dos sensores
+ * Aceita tanto o _id do MongoDB quanto o device_id textual
  */
 exports.getHistory = async (req, res) => {
   const { device_id } = req.params;
   const { limit = 100, skip = 0, start_date, end_date, sensor } = req.query;
   
-  const device = await Device.findOne({ device_id }).exec();
+  const device = await findDeviceByIdOrDeviceId(device_id);
   if (!device) {
     return res.status(404).json({ 
       success: false, 
