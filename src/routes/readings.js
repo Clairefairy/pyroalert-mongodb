@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const readingController = require('../controllers/readingController');
 const auth = require('../middleware/auth');
+const { optionalAuth } = require('../middleware/auth');
 
 /**
  * @swagger
@@ -133,7 +134,7 @@ router.post('/from-api', auth, readingController.createFromApi);
  *       404:
  *         description: Dispositivo ou leitura não encontrado
  */
-router.get('/device/:device_id/latest', auth, readingController.getLatest);
+router.get('/device/:device_id/latest', optionalAuth, readingController.getLatest);
 
 /**
  * @swagger
@@ -183,7 +184,7 @@ router.get('/device/:device_id/latest', auth, readingController.getLatest);
  *       404:
  *         description: Dispositivo não encontrado
  */
-router.get('/device/:device_id/history', auth, readingController.getHistory);
+router.get('/device/:device_id/history', optionalAuth, readingController.getHistory);
 
 /**
  * @swagger

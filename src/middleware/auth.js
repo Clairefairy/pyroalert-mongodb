@@ -42,6 +42,40 @@ const auth = async (req, res, next) => {
 };
 
 /**
+ * Middleware de autenticação opcional
+ * Se o token for fornecido, valida e adiciona req.user
+ * Se não for fornecido, permite acesso anônimo
+ */
+const optionalAuth = async (req, res, next) => {
+  const header = req.headers.authorization;
+  
+  // Se não houver header de autorização, permite acesso anônimo
+  if (!header || !header.startsWith('Bearer ')) {
+    req.user = null;
+    return next();
+  }
+  
+  const token = header.split(' ')[1];
+  
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    
+    req.user = { 
+      id: payload.sub, 
+      email: payload.email, 
+      role: payload.role,
+      scope: payload.scope ? payload.scope.split(' ') : ['read', 'write']
+    };
+    
+    next();
+  } catch (err) {
+    // Token inválido, mas ainda permite acesso anônimo
+    req.user = null;
+    next();
+  }
+};
+
+/**
  * Middleware para verificar escopos OAuth2
  * Uso: requireScope('read', 'write')
  */
@@ -70,4 +104,5 @@ const requireScope = (...requiredScopes) => {
 };
 
 module.exports = auth;
+module.exports.optionalAuth = optionalAuth;
 module.exports.requireScope = requireScope;
