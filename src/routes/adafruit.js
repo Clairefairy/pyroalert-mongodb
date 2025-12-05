@@ -87,3 +87,5 @@ router.post('/sync/device/:device_id', auth, adafruitController.syncByDeviceId);
 
 module.exports = router;
 
+
+

@@ -81,3 +81,5 @@ RefreshTokenSchema.statics.revokeAllUserTokens = async function(userId) {
 module.exports = model('RefreshToken', RefreshTokenSchema);
 
 
+
+

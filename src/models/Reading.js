@@ -92,3 +92,5 @@ ReadingSchema.statics.createFromApiData = async function(deviceId, apiData) {
 
 module.exports = model('Reading', ReadingSchema);
 
+
+

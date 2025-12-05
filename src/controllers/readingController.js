@@ -192,6 +192,7 @@ exports.getLatest = async (req, res) => {
 /**
  * GET /api/v1/readings/device/:device_id/history
  * Busca histórico de leituras de um dispositivo
+ * A ordenação e filtro por data são baseados no campo readAt dos sensores
  */
 exports.getHistory = async (req, res) => {
   const { device_id } = req.params;
@@ -205,29 +206,76 @@ exports.getHistory = async (req, res) => {
     });
   }
   
-  const filter = { device: device._id };
+  // Sensores disponíveis
+  const sensors = ['smoke', 'sense', 'temp', 'humid', 'moist'];
+  const targetSensors = sensor && sensors.includes(sensor) ? [sensor] : sensors;
   
-  // Filtro por período
+  // Construir pipeline de agregação
+  const pipeline = [
+    // Match pelo dispositivo
+    { $match: { device: device._id } }
+  ];
+  
+  // Adicionar campo para ordenação baseado no readAt mais recente entre os sensores
+  // Usamos o readAt do primeiro sensor disponível para ordenar
+  pipeline.push({
+    $addFields: {
+      sortDate: {
+        $max: [
+          '$smoke.readAt',
+          '$sense.readAt', 
+          '$temp.readAt',
+          '$humid.readAt',
+          '$moist.readAt'
+        ]
+      }
+    }
+  });
+  
+  // Filtro por período baseado no readAt dos sensores
   if (start_date || end_date) {
-    filter.createdAt = {};
-    if (start_date) filter.createdAt.$gte = new Date(start_date);
-    if (end_date) filter.createdAt.$lte = new Date(end_date);
+    const dateFilter = {};
+    if (start_date) dateFilter.$gte = new Date(start_date);
+    if (end_date) dateFilter.$lte = new Date(end_date);
+    
+    // Filtrar por qualquer sensor que tenha readAt no período
+    const orConditions = targetSensors.map(s => ({
+      [`${s}.readAt`]: dateFilter
+    }));
+    
+    pipeline.push({ $match: { $or: orConditions } });
   }
   
   // Projeção para retornar apenas sensor específico
-  let projection = {};
-  if (sensor && ['smoke', 'sense', 'temp', 'humid', 'moist'].includes(sensor)) {
-    projection = { [sensor]: 1, device: 1, createdAt: 1 };
+  if (sensor && sensors.includes(sensor)) {
+    pipeline.push({
+      $project: {
+        device: 1,
+        [sensor]: 1,
+        sortDate: 1,
+        createdAt: 1
+      }
+    });
   }
   
-  const [readings, total] = await Promise.all([
-    Reading.find(filter, projection)
-      .sort({ createdAt: -1 })
-      .skip(parseInt(skip))
-      .limit(parseInt(limit))
-      .exec(),
-    Reading.countDocuments(filter)
+  // Ordenar pelo readAt mais recente (descendente)
+  pipeline.push({ $sort: { sortDate: -1 } });
+  
+  // Paginação
+  const countPipeline = [...pipeline, { $count: 'total' }];
+  pipeline.push({ $skip: parseInt(skip) });
+  pipeline.push({ $limit: parseInt(limit) });
+  
+  // Remover campo auxiliar de ordenação
+  pipeline.push({ $project: { sortDate: 0 } });
+  
+  // Executar queries
+  const [readings, countResult] = await Promise.all([
+    Reading.aggregate(pipeline).exec(),
+    Reading.aggregate(countPipeline).exec()
   ]);
+  
+  const total = countResult.length > 0 ? countResult[0].total : 0;
   
   res.json({ 
     success: true, 
@@ -263,4 +311,6 @@ exports.delete = async (req, res) => {
     message: 'Leitura excluída com sucesso' 
   });
 };
+
+
 
