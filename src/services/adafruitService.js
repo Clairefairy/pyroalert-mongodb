@@ -15,7 +15,8 @@ const ADAFRUIT_CONFIG = {
     moist: 'pyroalert.umisolo',    // Umidade do Solo
     temp: 'pyroalert.umi22',       // Temperatura do Ar
     humid: 'pyroalert.temp22',     // Umidade do Ar
-    sense: 'pyroalert.sense22'     // Sensação Térmica
+    sense: 'pyroalert.sense22',    // Sensação Térmica
+    pluvi: 'pyroalert.CountPluvi'  // Contagem do Pluviômetro
   }
 };
 
@@ -138,6 +139,7 @@ module.exports = {
   syncReadingsByDeviceId,
   getFeedsStatus
 };
+
 
 
 

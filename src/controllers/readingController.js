@@ -88,7 +88,7 @@ exports.get = async (req, res) => {
  * Cria uma nova leitura manualmente
  */
 exports.create = async (req, res) => {
-  const { device_id, smoke, sense, temp, humid, moist } = req.body;
+  const { device_id, smoke, sense, temp, humid, moist, pluvi } = req.body;
   
   if (!device_id) {
     return res.status(400).json({ 
@@ -112,7 +112,8 @@ exports.create = async (req, res) => {
     sense,
     temp,
     humid,
-    moist
+    moist,
+    pluvi
   });
   
   await reading.save();
@@ -135,7 +136,7 @@ exports.create = async (req, res) => {
  * Corrige automaticamente o fuso horário (-3h)
  */
 exports.createFromApi = async (req, res) => {
-  const { device_id, smoke, sense, temp, humid, moist, raw } = req.body;
+  const { device_id, smoke, sense, temp, humid, moist, pluvi, raw } = req.body;
   
   if (!device_id) {
     return res.status(400).json({ 
@@ -160,6 +161,7 @@ exports.createFromApi = async (req, res) => {
     temp,
     humid,
     moist,
+    pluvi,
     raw
   });
   
@@ -225,7 +227,7 @@ exports.getHistory = async (req, res) => {
   }
   
   // Sensores disponíveis
-  const sensors = ['smoke', 'sense', 'temp', 'humid', 'moist'];
+  const sensors = ['smoke', 'sense', 'temp', 'humid', 'moist', 'pluvi'];
   const targetSensors = sensor && sensors.includes(sensor) ? [sensor] : sensors;
   
   // Construir pipeline de agregação
@@ -244,7 +246,8 @@ exports.getHistory = async (req, res) => {
           '$sense.readAt', 
           '$temp.readAt',
           '$humid.readAt',
-          '$moist.readAt'
+          '$moist.readAt',
+          '$pluvi.readAt'
         ]
       }
     }

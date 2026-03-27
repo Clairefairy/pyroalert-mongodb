@@ -241,6 +241,7 @@ const options = {
             temp: { $ref: '#/components/schemas/SensorReading' },
             humid: { $ref: '#/components/schemas/SensorReading' },
             moist: { $ref: '#/components/schemas/SensorReading' },
+            pluvi: { $ref: '#/components/schemas/SensorReading' },
             createdAt: { type: 'string', format: 'date-time' },
             updatedAt: { type: 'string', format: 'date-time' }
           }
@@ -254,7 +255,8 @@ const options = {
             sense: { $ref: '#/components/schemas/SensorReading' },
             temp: { $ref: '#/components/schemas/SensorReading' },
             humid: { $ref: '#/components/schemas/SensorReading' },
-            moist: { $ref: '#/components/schemas/SensorReading' }
+            moist: { $ref: '#/components/schemas/SensorReading' },
+            pluvi: { $ref: '#/components/schemas/SensorReading' }
           }
         },
         ApiSensorData: {
@@ -274,6 +276,7 @@ const options = {
             temp: { $ref: '#/components/schemas/ApiSensorData' },
             humid: { $ref: '#/components/schemas/ApiSensorData' },
             moist: { $ref: '#/components/schemas/ApiSensorData' },
+            pluvi: { $ref: '#/components/schemas/ApiSensorData' },
             raw: { type: 'object', description: 'Dados brutos da API (opcional)' }
           }
         }
@@ -286,7 +289,7 @@ const options = {
     { name: 'Two-Factor Auth', description: 'Autenticação de dois fatores (2FA/TOTP)' },
     { name: 'Autenticação', description: 'Endpoints de autenticação legados' },
     { name: 'Dispositivos', description: 'Gerenciamento de dispositivos' },
-    { name: 'Leituras', description: 'Leituras dos sensores (smoke, temp, humid, moist, sense)' },
+    { name: 'Leituras', description: 'Leituras dos sensores (smoke, temp, humid, moist, sense, pluvi)' },
     { name: 'Adafruit IO', description: 'Integração com Adafruit IO para coleta de dados' },
     { name: 'Alertas', description: 'Gerenciamento de alertas' },
     { name: 'Telemetria', description: 'Dados de telemetria' },

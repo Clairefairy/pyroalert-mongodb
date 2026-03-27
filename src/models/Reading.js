@@ -9,6 +9,7 @@ const { Schema, model } = require('mongoose');
  * - temp: temperatura
  * - humid: umidade do ar
  * - moist: umidade do solo
+ * - pluvi: contador do pluviômetro
  * 
  * Cada campo contém:
  * - value: valor da leitura (last_value da API)
@@ -34,6 +35,7 @@ const ReadingSchema = new Schema({
   temp: SensorReadingSchema,   // Temperatura
   humid: SensorReadingSchema,  // Umidade do ar
   moist: SensorReadingSchema,  // Umidade do solo
+  pluvi: SensorReadingSchema,  // Contagem do pluviômetro
   
   // Metadados
   raw: { type: Schema.Types.Mixed } // Dados brutos da API (opcional)
@@ -84,6 +86,10 @@ ReadingSchema.statics.createFromApiData = async function(deviceId, apiData) {
       value: apiData.moist.last_value,
       readAt: correctTimezone(apiData.moist.updated_at)
     } : undefined,
+    pluvi: apiData.pluvi ? {
+      value: apiData.pluvi.last_value,
+      readAt: correctTimezone(apiData.pluvi.updated_at)
+    } : undefined,
     raw: apiData.raw || undefined
   });
   
@@ -91,6 +97,7 @@ ReadingSchema.statics.createFromApiData = async function(deviceId, apiData) {
 };
 
 module.exports = model('Reading', ReadingSchema);
+
 
 
 

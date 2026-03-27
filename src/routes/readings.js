@@ -156,7 +156,7 @@ router.get('/device/:device_id/latest', optionalAuth, readingController.getLates
  *         name: sensor
  *         schema:
  *           type: string
- *           enum: [smoke, sense, temp, humid, moist]
+ *           enum: [smoke, sense, temp, humid, moist, pluvi]
  *         description: Filtrar por sensor específico
  *       - in: query
  *         name: start_date
