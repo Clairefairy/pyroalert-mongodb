@@ -7,6 +7,7 @@ const cors = require('cors');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swagger');
 const connectDB = require('./config/db');
+const { startAdafruitAutoSync } = require('./services/adafruitSyncScheduler');
 
 const app = express();
 
@@ -16,8 +17,23 @@ app.use(cors());
 app.use(express.json({ limit: '1mb' }));
 app.use(morgan('dev'));
 
-// Conectar ao banco de dados
-connectDB(process.env.MONGODB_URI);
+// ==================== START SERVER ====================
+
+const port = process.env.PORT || 4000;
+
+const startServer = async () => {
+  // Conectar ao banco antes de iniciar scheduler e servidor HTTP
+  await connectDB(process.env.MONGODB_URI);
+  startAdafruitAutoSync();
+  
+  app.listen(port, () => {
+    console.log('='.repeat(50));
+    console.log(`🔥 PyroAlert API v1.0.0`);
+    console.log(`🚀 Servidor rodando em http://localhost:${port}`);
+    console.log(`📚 Documentação em http://localhost:${port}/api/docs`);
+    console.log('='.repeat(50));
+  });
+};
 
 // ==================== ROTAS ====================
 
@@ -97,14 +113,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// ==================== START SERVER ====================
-
-const port = process.env.PORT || 4000;
-
-app.listen(port, () => {
-  console.log('='.repeat(50));
-  console.log(`🔥 PyroAlert API v1.0.0`);
-  console.log(`🚀 Servidor rodando em http://localhost:${port}`);
-  console.log(`📚 Documentação em http://localhost:${port}/api/docs`);
-  console.log('='.repeat(50));
+startServer().catch((err) => {
+  console.error('Falha ao iniciar servidor:', err.message);
+  process.exit(1);
 });

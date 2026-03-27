@@ -75,6 +75,13 @@ BCRYPT_SALT_ROUNDS=10
 
 # App (usado no 2FA)
 APP_NAME=PyroAlert
+
+# Adafruit IO (para integração automática de leituras)
+ADAFRUIT_IO_KEY=sua-chave-aio-do-adafruit
+ADAFRUIT_AUTO_SYNC=true
+ADAFRUIT_SYNC_INTERVAL_MS=30000
+# Opcional: lista de device_id separados por vírgula
+# ADAFRUIT_SYNC_DEVICE_IDS=PYRO-TEST-001,PYRO-001
 ```
 
 ## 🚀 Executando

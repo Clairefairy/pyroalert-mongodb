@@ -10,13 +10,14 @@ const Device = require('../models/Device');
 // Configuração dos feeds do Adafruit IO
 const ADAFRUIT_CONFIG = {
   baseUrl: 'https://io.adafruit.com/api/v2/pyroalert/feeds',
+  apiKey: process.env.ADAFRUIT_IO_KEY || process.env.ADAFRUIT_KEY || '',
   feeds: {
     smoke: 'pyroalert.fumo',       // Fumaça
     moist: 'pyroalert.umisolo',    // Umidade do Solo
     temp: 'pyroalert.umi22',       // Temperatura do Ar
     humid: 'pyroalert.temp22',     // Umidade do Ar
     sense: 'pyroalert.sense22',    // Sensação Térmica
-    pluvi: 'pyroalert.CountPluvi'  // Contagem do Pluviômetro
+    pluvi: 'pyroalert.countpluvi'  // Contagem do Pluviômetro
   }
 };
 
@@ -26,14 +27,54 @@ const ADAFRUIT_CONFIG = {
  * @returns {Promise<object>} Dados do feed
  */
 const fetchFeed = async (feedKey) => {
+  const candidates = Array.from(new Set([
+    feedKey,
+    String(feedKey).toLowerCase(),
+    String(feedKey).replace(/^pyroalert\./i, ''),
+    String(feedKey).replace(/^pyroalert\./i, '').toLowerCase()
+  ])).filter(Boolean);
+
   try {
-    const url = `${ADAFRUIT_CONFIG.baseUrl}/${feedKey}`;
-    const response = await axios.get(url, { timeout: 10000 });
-    return response.data;
+    const headers = ADAFRUIT_CONFIG.apiKey ? { 'X-AIO-Key': ADAFRUIT_CONFIG.apiKey } : undefined;
+
+    for (const candidate of candidates) {
+      try {
+        const url = `${ADAFRUIT_CONFIG.baseUrl}/${candidate}`;
+        const response = await axios.get(url, { timeout: 10000, headers });
+        return response.data;
+      } catch (error) {
+        if (error.response?.status !== 404) {
+          throw error;
+        }
+      }
+    }
+
+    console.error(`Erro ao buscar feed ${feedKey}: feed não encontrado (404)`);
+    return null;
   } catch (error) {
     console.error(`Erro ao buscar feed ${feedKey}:`, error.message);
     return null;
   }
+};
+
+/**
+ * Verifica se há dados novos em relação à última leitura salva
+ */
+const hasNewSensorData = (latestReading, feedsData) => {
+  if (!latestReading) return true;
+
+  return Object.entries(feedsData).some(([sensor, data]) => {
+    const previous = latestReading[sensor];
+    if (!previous || !previous.readAt) return true;
+
+    const currentReadAt = Reading.correctTimezone(data.updated_at);
+    const previousReadAt = new Date(previous.readAt);
+
+    const sameTimestamp = currentReadAt.getTime() === previousReadAt.getTime();
+    const sameValue = Number(data.last_value) === Number(previous.value);
+
+    return !(sameTimestamp && sameValue);
+  });
 };
 
 /**
@@ -77,6 +118,26 @@ const syncReadings = async (deviceId) => {
   
   if (Object.keys(feedsData).length === 0) {
     throw new Error('Não foi possível obter dados dos feeds');
+  }
+
+  // Evita loop de importação da mesma leitura
+  const latestReading = await Reading.findOne({ device: deviceId })
+    .sort({ createdAt: -1 })
+    .lean()
+    .exec();
+
+  if (!hasNewSensorData(latestReading, feedsData)) {
+    console.log('[Adafruit] Sem novos dados para salvar. Última leitura já sincronizada.');
+    return {
+      reading: null,
+      skipped: true,
+      reason: 'latest-reading-already-synced',
+      feedsData,
+      device: {
+        id: device._id,
+        device_id: device.device_id
+      }
+    };
   }
   
   // Criar leitura usando o método que corrige o fuso horário
